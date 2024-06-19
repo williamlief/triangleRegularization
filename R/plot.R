@@ -11,14 +11,14 @@
 #' @export
 #'
 #' @examples
-triangle_plot <- function(df_edges, polys) {
+triangle_plot <- function(df_edges, polys, tolerance = 0.001) {
 
   bad_polys <- invalid_polys(df_edges, polys)
   
   df_edges$valid <- c()
   
   for(i in 1:length(polys)){
-    df_edges[polys[[i]],"valid"] = bad_polys[i] <= 0
+    df_edges[polys[[i]],"valid"] = bad_polys[i] <= tolerance
   }
   
   g <- igraph::graph_from_data_frame(df_edges, directed = FALSE)
