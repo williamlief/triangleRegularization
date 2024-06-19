@@ -9,13 +9,13 @@
 #' @examples
 triangle_plot <- function(df_edges, polys) {
 
-  g <- graph_from_data_frame(df_edges, directed = FALSE)
+  g <- igraph::graph_from_data_frame(df_edges, directed = FALSE)
 
   # TODO: highlight the edges that are too big
-  edge_colors <- ifelse(E(g)$edge == 1, "red", "gray")
+  edge_colors <- ifelse(igraph::E(g)$edge == 1, "red", "gray")
 
   plot(g,
        edge.color = edge_colors,
-       edge.label = E(g)$edge)
+       edge.label = igraph::E(g)$edge)
 
 }

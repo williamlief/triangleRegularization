@@ -1,3 +1,9 @@
+source("R/plot.R")
+source("R/polys.R")
+source("R/triangle.R")
+
+# simple no adjustmnet, 3 tests linked
+# note: ignore color in the plot for now - not yet implemented
 df_edges <-
   tidyr::tribble(
     ~node1, ~node2, ~edge,
@@ -10,7 +16,7 @@ tris <- get_triangles(df_edges)
 triangle_plot(df_edges, tris)
 learn_polys(df_edges, tris)
 
-
+# Still simple, now we adjust a bit - see the console output for the modified edges
 df_edges <-
   tidyr::tribble(
     ~node1, ~node2, ~edge,
@@ -24,7 +30,7 @@ triangle_plot(df_edges, tris)
 learn_polys(df_edges, tris)
 
 
-
+# more tests being linked, every node is linked to every other node still
 df_edges <-
   tidyr::tribble(
     ~node1, ~node2, ~edge,
@@ -40,7 +46,7 @@ tris <- get_triangles(df_edges)
 triangle_plot(df_edges, tris)
 learn_polys(df_edges, tris)
 
-
+# even more tests, no longer full connections between nodes
 df_edges <-
   tidyr::tribble(
     ~node1, ~node2, ~edge,
