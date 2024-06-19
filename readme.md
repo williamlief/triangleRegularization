@@ -107,12 +107,55 @@ triangle_plot(update, tris)
 
 <img src="man/figures/README-example_with_square-2.png" width="100%" />
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
+And finally here is a complex example
 
-You can also embed plots, for example:
+``` r
 
-<img src="man/figures/README-pressure-1.png" width="100%" />
+df_edges <-
+  tidyr::tribble(
+    ~node1, ~node2, ~edge,
+    "a", "b", 1,
+    "a", "c", 1,
+    "a", "d", 4,
+    "b", "c", 3,
+    "b", "d", 2,
+    "c", "d", 2,
+    "a", "e", 1,
+    "b", "e", 5,
+    "a", "f", 6,
+    "e", "f", 4,
+    "c", "g", 4,
+    "d", "g", 1
+  )
 
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+tris <- get_triangles(df_edges)
+triangle_plot(df_edges, tris)
+```
+
+<img src="man/figures/README-example_complex-1.png" width="100%" />
+
+``` r
+update <- learn_polys(df_edges, tris)
+update
+#> # A tibble: 12 × 3
+#>    node1 node2  edge
+#>    <chr> <chr> <dbl>
+#>  1 a     b      2.09
+#>  2 a     c      1.28
+#>  3 a     d      3.72
+#>  4 b     c      2.90
+#>  5 b     d      2.10
+#>  6 c     d      2.45
+#>  7 a     e      2.02
+#>  8 b     e      4.11
+#>  9 a     f      5.86
+#> 10 e     f      4.14
+#> 11 c     g      3.73
+#> 12 d     g      1.27
+```
+
+``` r
+triangle_plot(update, tris)
+```
+
+<img src="man/figures/README-example_complex-2.png" width="100%" />
