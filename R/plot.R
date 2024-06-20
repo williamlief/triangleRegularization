@@ -7,10 +7,20 @@
 #'
 #' @inheritParams learn_polys
 #'
-#' @return
+#' @return a plot
 #' @export
 #'
 #' @examples
+#' df_edges <-
+#' tidyr::tribble(
+#'  ~node1, ~node2, ~edge,
+#'  "a", "b", 1,
+#'  "a", "c", 1,
+#'  "b", "c", 3
+#' )
+#'
+#' tris <- get_triangles(df_edges)
+#' triangle_plot(df_edges, tris)
 triangle_plot <- function(df_edges, polys, tolerance = 0.001) {
 
   bad_polys <- invalid_polys(df_edges, polys)
