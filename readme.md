@@ -169,7 +169,7 @@ triangle_plot(update, tris)
 You can also include a `weight` column in df_edges. The weights column
 will be normalized within each triangle as w = w/sum(w) for that
 particular triangle. Edges with larger weights will be adjusted
-proportionally more than edges with smaller weights.
+proportionally less than edges with smaller weights.
 
 ``` r
 df_edges <-

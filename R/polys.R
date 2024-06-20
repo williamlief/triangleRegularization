@@ -1,11 +1,14 @@
 #' Adjust distances between nodes so all polygons are valid
 #'
-#' @param df_edges a dataframe with columns `node1`, `node2`, `edge`, `weight`. weight
-#'   col can be excluded. First two columns must be node1, node2 because of use
-#'   of igraph:::graph_from_data_frame.
+#' @param df_edges a dataframe with columns `node1`, `node2`, `edge`, `weight`.
+#'   weight col can be excluded. First two columns must be node1, node2 because
+#'   of use of igraph:::graph_from_data_frame.
 #' @param polys a list of lists, where each element is the row indices from
 #'   df_edges that make up a polygon
-#' @param use_weights logical
+#' @param use_weights logical. If TRUE df_edges must contain a column called
+#'   `weight`. A larger weight value means that an edge will be adjusted
+#'   proportionally less. Weights are normalized to sum to 1 within each
+#'   triangle.
 #' @param alpha learning rate
 #' @param tolerance allowed error in checking polygon inequality
 #'
@@ -133,6 +136,7 @@ adjust_poly <- function(edges, delta, weights = NULL) {
 
   if (!is.null(weights)) {
     if(length(weights) != length(edges)) stop("edges and weights differing lengths")
+    weights = 1 / weights # bigger weight means less adjustment
     norm_weights = weights / sum(weights)
     adjust_factor = adjust_factor * norm_weights
   }
