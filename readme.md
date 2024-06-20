@@ -22,6 +22,8 @@ devtools::install_github("williamlief/triangleRegularization")
 
 ## Examples
 
+### A single triangle
+
 This is a basic example with a valid triangle, no updates are made. Note
 that the edge length labels are NOT proportional to the graphed length -
 this is necessary because we will be showing invalid triangles, that is,
@@ -79,6 +81,8 @@ triangle_plot(update, tris)
 ```
 
 <img src="man/figures/README-example_invalid-2.png" width="100%" />
+
+### Multiple Triangles
 
 Now we have a mix of valid and invalid triangles, with shared edges.
 
@@ -159,3 +163,32 @@ triangle_plot(update, tris)
 ```
 
 <img src="man/figures/README-example_complex-2.png" width="100%" />
+
+### Using Weights
+
+You can also include a `weight` column in df_edges. The weights column
+will be normalized within each triangle as w = w/sum(w) for that
+particular triangle. Edges with larger weights will be adjusted
+proportionally more than edges with smaller weights.
+
+``` r
+df_edges <-
+  tidyr::tribble(
+    ~node1, ~node2, ~edge, ~weight,
+    "a", "b", 1, 1,
+    "a", "c", 1, 1,
+    "b", "c", 3, 4
+  )
+
+tris <- get_triangles(df_edges)
+triangle_plot(df_edges, tris)
+```
+
+<img src="man/figures/README-example_weights-1.png" width="100%" />
+
+``` r
+update <- learn_polys(df_edges, tris, use_weights = TRUE)
+triangle_plot(update, tris)
+```
+
+<img src="man/figures/README-example_weights-2.png" width="100%" />
