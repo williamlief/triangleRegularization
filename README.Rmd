@@ -34,7 +34,7 @@ devtools::install_github("williamlief/triangleRegularization")
 ### A single triangle
 This is a basic example with a valid triangle, no updates are made. Note that the edge length labels are NOT proportional to the graphed length - this is necessary because we will be showing invalid triangles, that is, cases where you can't close the shape with the listed edge lengths. 
 
-```{r example_valid}
+```{r example_valid, figures-side, fig.show="hold", out.width="50%"}
 library(triangleRegularization)
 
 df_edges <-
@@ -45,15 +45,18 @@ df_edges <-
     "b", "c", 2
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
-learn_polys(df_edges, tris)
+
+triangle_plot(df_edges, tris, layout, main = "input graph")
+update <- learn_polys(df_edges, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 
 ```
 
 Now we have an invalid triangle and we update it to be valid. We are implicitly using equal weights here, so the long side and the short sides are all adjusted by the same amount.
 
-```{r example_invalid}
+```{r example_invalid, figures-side, fig.show="hold", out.width="50%"}
 df_edges <-
   tidyr::tribble(
     ~node1, ~node2, ~edge,
@@ -62,16 +65,19 @@ df_edges <-
     "b", "c", 3
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
+
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris)
-triangle_plot(update, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
+
 ```
 
 ### Multiple Triangles
 Now we have a mix of valid and invalid triangles, with shared edges. 
 
-```{r example_with_square}
+```{r example_with_square, figures-side, fig.show="hold", out.width="50%"}
 df_edges <-
   tidyr::tribble(
     ~node1, ~node2, ~edge,
@@ -83,15 +89,17 @@ df_edges <-
     "c", "d", 2
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
+
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris)
-triangle_plot(update, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
 And finally here is a complex example
 
-```{r example_complex}
+```{r example_complex, figures-side, fig.show="hold", out.width="50%"}
 
 df_edges <-
   tidyr::tribble(
@@ -110,18 +118,19 @@ df_edges <-
     "d", "g", 1
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
+
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris)
-update
-triangle_plot(update, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
 ### Using Weights
 
-You can also include a `weight` column in df_edges. The weights column will be normalized within each triangle as w = w/sum(w) for that particular triangle. Edges with larger weights will be adjusted proportionally less than edges with smaller weights. 
+You can also include a `weight` column in df_edges. The weights column will be normalized within each triangle as `w = w/sum(w)`. Edges with larger weights will be adjusted proportionally less than edges with smaller weights. 
 
-```{r example_weights}
+```{r example_weights, figures-side, fig.show="hold", out.width="50%"}
 df_edges <-
   tidyr::tribble(
     ~node1, ~node2, ~edge, ~weight,
@@ -130,8 +139,10 @@ df_edges <-
     "b", "c", 3, 4
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
+
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris, use_weights = TRUE)
-triangle_plot(update, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 ```

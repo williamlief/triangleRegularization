@@ -40,21 +40,15 @@ df_edges <-
     "b", "c", 2
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
+
+triangle_plot(df_edges, tris, layout, main = "input graph")
+update <- learn_polys(df_edges, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_valid-1.png" width="100%" />
-
-``` r
-learn_polys(df_edges, tris)
-#> # A tibble: 3 × 3
-#>   node1 node2  edge
-#>   <chr> <chr> <dbl>
-#> 1 a     b         1
-#> 2 a     c         1
-#> 3 b     c         2
-```
+<img src="man/figures/README-example_valid, figures-side-1.png" width="50%" /><img src="man/figures/README-example_valid, figures-side-2.png" width="50%" />
 
 Now we have an invalid triangle and we update it to be valid. We are
 implicitly using equal weights here, so the long side and the short
@@ -69,18 +63,15 @@ df_edges <-
     "b", "c", 3
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
-```
 
-<img src="man/figures/README-example_invalid-1.png" width="100%" />
-
-``` r
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris)
-triangle_plot(update, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_invalid-2.png" width="100%" />
+<img src="man/figures/README-example_invalid, figures-side-1.png" width="50%" /><img src="man/figures/README-example_invalid, figures-side-2.png" width="50%" />
 
 ### Multiple Triangles
 
@@ -98,18 +89,15 @@ df_edges <-
     "c", "d", 2
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
-```
 
-<img src="man/figures/README-example_with_square-1.png" width="100%" />
-
-``` r
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris)
-triangle_plot(update, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_with_square-2.png" width="100%" />
+<img src="man/figures/README-example_with_square, figures-side-1.png" width="50%" /><img src="man/figures/README-example_with_square, figures-side-2.png" width="50%" />
 
 And finally here is a complex example
 
@@ -132,44 +120,22 @@ df_edges <-
     "d", "g", 1
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
-```
 
-<img src="man/figures/README-example_complex-1.png" width="100%" />
-
-``` r
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris)
-update
-#> # A tibble: 12 × 3
-#>    node1 node2  edge
-#>    <chr> <chr> <dbl>
-#>  1 a     b      2.09
-#>  2 a     c      1.28
-#>  3 a     d      3.72
-#>  4 b     c      2.90
-#>  5 b     d      2.10
-#>  6 c     d      2.45
-#>  7 a     e      2.02
-#>  8 b     e      4.11
-#>  9 a     f      5.86
-#> 10 e     f      4.14
-#> 11 c     g      3.73
-#> 12 d     g      1.27
+triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-``` r
-triangle_plot(update, tris)
-```
-
-<img src="man/figures/README-example_complex-2.png" width="100%" />
+<img src="man/figures/README-example_complex, figures-side-1.png" width="50%" /><img src="man/figures/README-example_complex, figures-side-2.png" width="50%" />
 
 ### Using Weights
 
 You can also include a `weight` column in df_edges. The weights column
-will be normalized within each triangle as w = w/sum(w) for that
-particular triangle. Edges with larger weights will be adjusted
-proportionally less than edges with smaller weights.
+will be normalized within each triangle as `w = w/sum(w)`. Edges with
+larger weights will be adjusted proportionally less than edges with
+smaller weights.
 
 ``` r
 df_edges <-
@@ -180,15 +146,12 @@ df_edges <-
     "b", "c", 3, 4
   )
 
+layout <- save_layout(df_edges)
 tris <- get_triangles(df_edges)
-triangle_plot(df_edges, tris)
-```
 
-<img src="man/figures/README-example_weights-1.png" width="100%" />
-
-``` r
+triangle_plot(df_edges, tris, layout, main = "input graph")
 update <- learn_polys(df_edges, tris, use_weights = TRUE)
-triangle_plot(update, tris)
+triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_weights-2.png" width="100%" />
+<img src="man/figures/README-example_weights, figures-side-1.png" width="50%" /><img src="man/figures/README-example_weights, figures-side-2.png" width="50%" />
