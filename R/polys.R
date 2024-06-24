@@ -40,8 +40,6 @@ learn_polys <- function(df_edges, polys, use_weights = FALSE, alpha = 0.1, toler
     # learning rate of 1 would be bad for convergence
     deltas <- checks * alpha
     
-    
-    
     for(i in 1:length(polys)){
       
       weights = if(use_weights) unlist(df_edges[polys[[i]], "weight"]) else NULL
