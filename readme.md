@@ -1,11 +1,41 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Triangle Regularization
+# Linkage Regularization
 
-Given a list of nodes and edge distances, updates edges so that for any
-set of three connected nodes, a valid triangle can be formed using the
-triangle inequality rule.
+Given a list of nodes, edge distances, and weights updates edges to
+propagate information through the network.
+
+Inputs are variable in a data frame `df_edges` with the following
+columns:
+
+- `node1`, `node2`: a pair of linked nodes.
+- `node1_weight`, `node2_weight` node weight: a measure of how well
+  measured that test is. Lower weights means the node should move more.
+- `edge`: the distance between two nodes.
+- `weight`: how well measured the `edge` is. Lower weights mean that
+  edge should move more.
+
+Three regularization techniques
+
+- Triangle regularization:
+  - Uses `edge` and edge `weight`
+  - updates until all cyclic graphs between any 3 nodes is a valid
+    triangle where the longest side is shorter than the sum of the other
+    two sides.
+- Gravity regularization (not implemented)
+  - Uses `edge` and `node1_weight`, `node2_weight`
+  - The closer two nodes are, the more strongly they will pull together.
+    I need to think about how to implement this, seems like it will be
+    problematic and will converge to a solution of a couple of node
+    clusters that are very distant from each other.
+- Spring regularization:
+  - Uses `edge`, edge `weight`, and `node1_weight`, `node2_weight`
+  - Simulate a network of springs that each want to collapse to a length
+    of 0 - spring strength is `edge` X `weight` (maybe this should be
+    inverse normed `weight`?). Uses node weights to distribute spring
+    forces among connected nodes. The further apart two nodes are, the
+    harder the spring will pull them together.
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -20,7 +50,7 @@ You can install the development version of Triangle Regularization from
 devtools::install_github("williamlief/triangleRegularization")
 ```
 
-## Examples
+## Triangle Regularization Examples
 
 ### A single triangle
 
@@ -48,7 +78,7 @@ update <- learn_polys(df_edges, tris)
 triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_valid, figures-side-1.png" width="50%" /><img src="man/figures/README-example_valid, figures-side-2.png" width="50%" />
+<img src="man/figures/README-example_tr_valid, figures-side-1.png" width="50%" /><img src="man/figures/README-example_tr_valid, figures-side-2.png" width="50%" />
 
 Now we have an invalid triangle and we update it to be valid. We are
 implicitly using equal weights here, so the long side and the short
@@ -71,7 +101,7 @@ update <- learn_polys(df_edges, tris)
 triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_invalid, figures-side-1.png" width="50%" /><img src="man/figures/README-example_invalid, figures-side-2.png" width="50%" />
+<img src="man/figures/README-example_tr_invalid, figures-side-1.png" width="50%" /><img src="man/figures/README-example_tr_invalid, figures-side-2.png" width="50%" />
 
 ### Multiple Triangles
 
@@ -97,7 +127,7 @@ update <- learn_polys(df_edges, tris)
 triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_with_square, figures-side-1.png" width="50%" /><img src="man/figures/README-example_with_square, figures-side-2.png" width="50%" />
+<img src="man/figures/README-example_tr_with_square, figures-side-1.png" width="50%" /><img src="man/figures/README-example_tr_with_square, figures-side-2.png" width="50%" />
 
 And finally here is a complex example
 
@@ -128,7 +158,7 @@ update <- learn_polys(df_edges, tris)
 triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_complex, figures-side-1.png" width="50%" /><img src="man/figures/README-example_complex, figures-side-2.png" width="50%" />
+<img src="man/figures/README-example_tr_complex, figures-side-1.png" width="50%" /><img src="man/figures/README-example_tr_complex, figures-side-2.png" width="50%" />
 
 ### Using Weights
 
@@ -154,4 +184,85 @@ update <- learn_polys(df_edges, tris, use_weights = TRUE)
 triangle_plot(update, tris, layout, main = "updated graph")
 ```
 
-<img src="man/figures/README-example_weights, figures-side-1.png" width="50%" /><img src="man/figures/README-example_weights, figures-side-2.png" width="50%" />
+<img src="man/figures/README-example_tr_weights, figures-side-1.png" width="50%" /><img src="man/figures/README-example_tr_weights, figures-side-2.png" width="50%" />
+
+## Spring Regularization Examples
+
+First a simple example with 3 nodes in a line. Note that the plot only
+shows the edge weights. Because all the edges and weights are the same,
+the two springs are balanced and no updates occur.
+
+``` r
+
+df_edges <-
+  tidyr::tribble(
+    ~node1, ~node2, ~edge, ~weight, ~node1_weight, ~node2_weight,
+    "a", "a1", 1, 1, 1, 1,
+    "a1", "b1", 1, 1, 1, 1,
+  )
+
+layout <- save_layout(df_edges)
+
+spring_plot(df_edges, layout = layout, main = "input graph")
+update <- learn_spring(df_edges)$df_edges
+spring_plot(update, layout, main = "updated graph")
+```
+
+<img src="man/figures/README-example_sp_3node_line, figures-side-1.png" width="50%" /><img src="man/figures/README-example_sp_3node_line, figures-side-2.png" width="50%" />
+
+Now we have four nodes connected in a line. In this example, even though
+the input data has all equal weights and distances, the network updates
+as the two outer edges contract and pull apart the middle edge.
+
+``` r
+
+df_edges <-
+  tidyr::tribble(
+    ~node1, ~node2, ~edge, ~weight, ~node1_weight, ~node2_weight,
+    "a", "a1", 1, 1, 1, 1,
+    "a1", "b1", 1, 1, 1, 1,
+    "b1", "b", 1, 1, 1, 1,
+  )
+
+layout <- save_layout(df_edges)
+
+spring_plot(df_edges, layout = layout, main = "input graph")
+update <- learn_spring(df_edges)$df_edges
+spring_plot(update, layout, main = "updated graph")
+```
+
+<img src="man/figures/README-example_sp_4node_line, figures-side-1.png" width="50%" /><img src="man/figures/README-example_sp_4node_line, figures-side-2.png" width="50%" />
+
+Here we have a complex example with a lot of connected nodes of varying
+weights.In this example, we’ve set node weights such that node a = 1 and
+node g = 7, and have alternated edge weights of 1 and 2. We can see that
+there are potentially very large changes in edge values. Look at the
+triangle AEF as an example of large shifts.
+
+``` r
+
+df_edges <-
+  tidyr::tribble(
+    ~node1, ~node2, ~edge, ~weight, ~node1_weight, ~node2_weight,
+    "a", "b", 1, 1, 1, 2,
+    "a", "c", 1, 2, 1, 3,
+    "a", "d", 4, 1, 1, 4,
+    "b", "c", 3, 2, 2, 3,
+    "b", "d", 2, 1, 2, 4,
+    "c", "d", 2, 2, 3, 4,
+    "a", "e", 1, 1, 1, 5,
+    "b", "e", 5, 2, 2, 5,
+    "a", "f", 6, 1, 1, 6,
+    "e", "f", 4, 2, 5, 6,
+    "c", "g", 4, 1, 3, 7, 
+    "d", "g", 1, 2, 4, 7,
+  )
+
+layout <- save_layout(df_edges)
+
+spring_plot(df_edges, layout = layout, main = "input graph")
+update <- learn_spring(df_edges)$df_edges
+spring_plot(update, layout, main = "updated graph")
+```
+
+<img src="man/figures/README-example_sp_complex, figures-side-1.png" width="50%" /><img src="man/figures/README-example_sp_complex, figures-side-2.png" width="50%" />
