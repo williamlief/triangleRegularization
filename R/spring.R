@@ -1,17 +1,14 @@
-
-# Hook's law f = k*x
-# weight = k
-# edge = d
-# relaxed state is d = 0 ?
-
-df_edges <-
-  tidyr::tribble(
-    ~node1, ~node2, ~edge, ~weight, ~node1_weight, ~node2_weight,
-    "a", "a1", 2, 1, 1, 1,
-    "a1", "b1", 1, 1, 1, 1,
-    "b1", "b", 2, 1, 1, 1,
-  )
-
+#' 
+#'
+#' @param edge 
+#' @param weight 
+#' @param node1_weight 
+#' @param node2_weight 
+#'
+#' @return a vector with three elements, the total force, and the weight force split between node1 and node2
+#' @export
+#'
+#' @examples
 measure_spring <- function(edge, weight, node1_weight, node2_weight) {
   
   # this edge reduces by f
@@ -30,6 +27,74 @@ measure_spring <- function(edge, weight, node1_weight, node2_weight) {
   
 }
 
+#' Title
+#'
+#' @param df_edges 
+#' @param deltas 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+adjust_spring <- function(df_edges, deltas) {
+  # Each spring contracts, and makes neighboring springs stretch
+  for (i in 1:nrow(deltas)) {
+    
+    # edge in question shrinks by delta
+    df_edges[i, "edge"] = df_edges[i, "edge"] - deltas[i,"edge"]
+    
+    # get the nodes in question
+    n1 = unlist(df_edges[i, "node1"])
+    n2 = unlist(df_edges[i, "node2"])
+    
+    # get their weighted share
+    d1 = deltas[i, "node1_weight"]
+    d2 = deltas[i, "node2_weight"]
+    
+    # connected edges stretch by weighted share of delta UNLESS one node has no
+    # connections, in which case the other node moves by the full amount. If we
+    # treat an unconnected node as being free, we lose force from the system and
+    # it leads to degenerate convergence to 0 lengths. 
+    
+    n1_links = which((df_edges$node1 == n1 & df_edges$node2 != n2) | 
+                       (df_edges$node2 == n1 & df_edges$node1 != n2))
+    
+    n2_links = which((df_edges$node1 == n2 & df_edges$node2 != n1) | 
+                       (df_edges$node2 == n2 & df_edges$node1 != n1))
+    
+
+
+    if(length(n2_links) == 0) d1 = d1 + d2
+    if(length(n1_links) == 0) d2 = d2 + d1 
+    if(length(n1_links) == 0 & length(n2_links) == 0) {
+      warning(paste("nodes:",n1, n2, "have no other connections. Distance will converge to 0"))
+    }
+    
+    # If a node is connected to multiple nodes, we need to split its delta among
+    # them otherwise we add force to the system which also has problems for
+    # convergence.
+    if(length(n1_links) != 0) d1 = d1 / length(n1_links)
+    if(length(n2_links) != 0) d2 = d2 / length(n2_links)
+    
+    # finally stretch the connected edges
+    df_edges[n1_links, "edge"] = df_edges[n1_links, "edge"] + d1
+    df_edges[n2_links, "edge"] = df_edges[n2_links, "edge"] + d2
+  }
+  
+  return(df_edges)
+}
+
+
+#' Title
+#'
+#' @param df_edges 
+#' @param alpha 
+#' @param tolerance 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 learn_spring <- function(df_edges, alpha = 0.1, tolerance = 0.001) {
 
   converged = FALSE
@@ -39,7 +104,7 @@ learn_spring <- function(df_edges, alpha = 0.1, tolerance = 0.001) {
   while (!converged) {
     iter = iter+1
     current_edges <- df_edges$edge
-    history[[iter]] <- current_edges
+    history[[iter]] <- df_edges
     
     # calculate how much each spring will move
     deltas <- apply(df_edges[c("edge", "weight", "node1_weight", "node2_weight")], 1, function(row) {
@@ -50,47 +115,30 @@ learn_spring <- function(df_edges, alpha = 0.1, tolerance = 0.001) {
     }) 
     deltas <- t(deltas * alpha)
     
-    # Each spring contracts, and makes neighboring springs stretch
-    for (i in 1:nrow(deltas)) {
-      
-      # edge in question shrinks by delta
-      df_edges[i, "edge"] = df_edges[i, "edge"] - deltas[i,"edge"]
-      
-      # connected edges stretch by n1/n2 weighted share of delta
-      n1 = unlist(df_edges[i, "node1"])
-      n2 = unlist(df_edges[i, "node2"])
-      d1 = deltas[i, "node1_weight"]
-      d2 = deltas[i, "node2_weight"]
-      
-      # node 1 connections
-      df_edges$edge = ifelse((df_edges$node1 == n1 & df_edges$node2 != n2) | 
-                             (df_edges$node2 == n1 & df_edges$node1 != n2),
-                             df_edges$edge + d1, 
-                             df_edges$edge)
-      
-      # node2 connections
-      df_edges$edge = ifelse((df_edges$node1 == n2 & df_edges$node2 != n1) | 
-                             (df_edges$node2 == n2 & df_edges$node1 != n1),
-                             df_edges$edge + d2, 
-                             df_edges$edge)
-    }
+    df_edges <- adjust_spring(df_edges, deltas)
 
     converged = sum(abs(current_edges - df_edges$edge)) < tolerance
   }
   
-  return(history)
+  res <- list(
+    df_edges = df_edges,
+    history = history
+  )
+  
+  return(res)
 }  
 
-history <- learn_spring(df_edges)
+# test <- learn_spring(df_edges)
+# 
+# library(tidyverse)
+# x <- bind_rows(test$history, .id = "iter") |> 
+#   mutate(
+#     iter = as.numeric(iter),
+#     edge_name = paste0(node1,"<->",node2)
+#   )
+# 
+# ggplot(data = x,
+#        aes(x = iter, y = edge, group = edge_name, color = edge_name)) +
+#   geom_line() +
+#   facet_wrap("edge_name")
 
-library(tidyverse)
-x <- do.call(rbind, lapply(history, function(x) unlist(x)))
-x <- data.frame(x)
-names(x) <- c("edge_a_a1", "edge_a1_b1", "edge_b1_b")
-x <- x |> rownames_to_column()
-x$rowname <- as.numeric(x$rowname)
-x <- pivot_longer(data.frame(x), -rowname)
-
-ggplot(data = x, aes(x = rowname, y = value, group = name, color = name)) +
-  geom_line() +
-  facet_wrap(~name)
